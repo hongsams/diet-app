@@ -136,6 +136,40 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .hint-bar{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.25);color:#fff;margin-top:4px}
 .install-banner{background:var(--teal-l);border:0.5px solid var(--teal-b);border-radius:12px;padding:12px;margin-bottom:12px;font-size:12px;color:var(--teal-d);display:none;align-items:flex-start;gap:10px}
 .install-banner i{font-size:22px;flex-shrink:0;margin-top:2px}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-sheet{background:var(--card);border-radius:22px 22px 0 0;width:100%;max-width:480px;padding:0 0 calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,1,.67,1)}
+.modal-sheet.show{transform:translateY(0)}
+.modal-drag{width:36px;height:4px;background:var(--border);border-radius:99px;margin:12px auto 0}
+.modal-header{padding:14px 18px 4px;display:flex;justify-content:space-between;align-items:center}
+.modal-title{font-size:17px;font-weight:700;color:var(--text)}
+.modal-close{width:30px;height:30px;border-radius:50%;border:none;background:var(--bg);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;color:var(--text2)}
+.modal-body{padding:6px 18px 10px}
+.mrow{display:flex;gap:8px;margin-bottom:10px;align-items:center}
+.mrow label{font-size:13px;color:var(--text2);width:80px;flex-shrink:0;font-weight:500}
+.mrow input,.mrow select{flex:1;height:44px;border:0.5px solid var(--border);border-radius:10px;padding:0 12px;font-size:15px;background:var(--bg);color:var(--text)}
+.mrow input:focus,.mrow select:focus{outline:none;border-color:var(--teal);background:var(--card)}
+.msec{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin:14px 0 8px}
+.preview-pill{display:inline-flex;align-items:center;gap:5px;background:var(--teal-l);color:var(--teal-d);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600;margin-bottom:10px}
+
+.goal-fab{position:fixed;bottom:calc(var(--tab-h) + var(--safe-bot) + 12px);right:16px;width:52px;height:52px;border-radius:50%;background:var(--teal);color:#fff;border:none;cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(29,158,117,.4);z-index:100;transition:transform .15s}
+.goal-fab:active{transform:scale(.9)}
+
+.achieve-card{background:var(--card);border-radius:14px;padding:14px 16px;margin-bottom:12px;border:0.5px solid var(--border)}
+.achieve-ring-wrap{display:flex;justify-content:center;margin-bottom:14px}
+.achieve-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.ach-item{background:var(--bg);border-radius:10px;padding:10px;text-align:center}
+.ach-val{font-size:17px;font-weight:700;color:var(--text)}
+.ach-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+.milestone-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:.5px solid var(--border);font-size:13px}
+.milestone-row:last-child{border-bottom:none}
+.ms-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.ms-done{background:var(--teal-l);color:var(--teal-d)}
+.ms-now{background:var(--amber-l);color:var(--amber-d)}
+.ms-todo{background:var(--bg);color:var(--text3)}
+.rate-bar{height:8px;background:var(--bg);border-radius:99px;overflow:hidden;margin:4px 0 2px}
+.rate-fill{height:100%;border-radius:99px;transition:width .6s}
 </style>
 </head>
 <body>
@@ -160,6 +194,61 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 <!-- 오늘 패널 -->
 <div class="panel active" id="panel-today">
+
+  <!-- 달성률 대시보드 -->
+  <div class="achieve-card" id="achieve-card">
+    <div class="ct"><i class="ti ti-trophy"></i> 목표 달성률</div>
+
+    <!-- SVG 링 차트 -->
+    <div class="achieve-ring-wrap">
+      <div style="position:relative;width:130px;height:130px">
+        <svg width="130" height="130" viewBox="0 0 130 130">
+          <circle cx="65" cy="65" r="52" fill="none" stroke="var(--bg)" stroke-width="14"/>
+          <circle cx="65" cy="65" r="52" fill="none" stroke="var(--teal)" stroke-width="14"
+            stroke-dasharray="326.7" id="ring-wt"
+            stroke-dashoffset="326.7" stroke-linecap="round"
+            transform="rotate(-90 65 65)"/>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div style="font-size:26px;font-weight:800;color:var(--teal)" id="ring-pct-txt">0%</div>
+          <div style="font-size:10px;color:var(--text3)">체중 달성</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 핵심 수치 -->
+    <div class="achieve-grid">
+      <div class="ach-item"><div class="ach-val" id="ach-lost">0.0</div><div class="ach-lbl">감량 kg</div></div>
+      <div class="ach-item"><div class="ach-val" id="ach-rem">-</div><div class="ach-lbl">남은 kg</div></div>
+      <div class="ach-item"><div class="ach-val" id="ach-days-gone">0</div><div class="ach-lbl">경과 일수</div></div>
+      <div class="ach-item"><div class="ach-val" id="ach-days-left" style="color:var(--teal)">-</div><div class="ach-lbl">남은 일수</div></div>
+    </div>
+
+    <!-- 세부 달성률 막대 -->
+    <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">세부 달성률</div>
+    <div style="margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:3px"><span>🏊 이번 주 수영</span><span id="rate-swim-lbl">0/3회</span></div>
+      <div class="rate-bar"><div class="rate-fill" id="rate-swim" style="width:0%;background:var(--teal)"></div></div>
+    </div>
+    <div style="margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:3px"><span>🥗 오늘 칼로리</span><span id="rate-cal-lbl">0/1320kcal</span></div>
+      <div class="rate-bar"><div class="rate-fill" id="rate-cal" style="width:0%;background:#FAC775"></div></div>
+    </div>
+    <div style="margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:3px"><span>🌙 어젯밤 수면</span><span id="rate-sleep-lbl">-</span></div>
+      <div class="rate-bar"><div class="rate-fill" id="rate-sleep" style="width:0%;background:var(--purple-b)"></div></div>
+    </div>
+
+    <!-- 마일스톤 -->
+    <div style="font-size:12px;font-weight:600;color:var(--text);margin:10px 0 6px">마일스톤</div>
+    <div id="milestone-list"></div>
+
+    <!-- 목표 설정 버튼 -->
+    <button class="btn" style="margin-top:10px;border-color:var(--teal);color:var(--teal)" onclick="openGoalModal()">
+      <i class="ti ti-edit"></i> 목표 수정하기
+    </button>
+  </div>
+
   <div id="install-banner" class="install-banner">
     <i class="ti ti-download"></i>
     <div>
@@ -337,13 +426,33 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     <button class="btn btn-primary" style="margin-top:12px" onclick="genGuide()"><i class="ti ti-refresh"></i> 가이드 갱신</button>
   </div>
   <div class="card">
-    <div class="ct"><i class="ti ti-target"></i> 목표 설정</div>
-    <div class="goal-row"><span class="gk">목표 칼로리</span><div class="gv-inp"><input type="number" id="goal-kcal" value="1320" min="800" max="3000"><span style="font-size:12px;color:var(--text2)">kcal</span></div></div>
+    <div class="ct"><i class="ti ti-user-circle"></i> 내 신체 정보</div>
+    <div class="goal-row"><span class="gk">나이</span><div class="gv-inp"><input type="number" id="p-age" value="50" min="10" max="100"><span style="font-size:12px;color:var(--text2)">세</span></div></div>
+    <div class="goal-row"><span class="gk">키</span><div class="gv-inp"><input type="number" id="p-height" value="170" min="100" max="250"><span style="font-size:12px;color:var(--text2)">cm</span></div></div>
+    <div class="goal-row"><span class="gk">성별</span>
+      <select id="p-gender" style="height:36px;border:0.5px solid var(--border);border-radius:8px;padding:0 10px;font-size:14px;background:var(--card);color:var(--text)">
+        <option value="male">남성</option><option value="female">여성</option>
+      </select>
+    </div>
+    <div style="background:var(--teal-l);border-radius:10px;padding:10px;margin-top:6px;font-size:12px;color:var(--teal-d)" id="bmr-preview"></div>
+  </div>
+  <div class="card">
+    <div class="ct"><i class="ti ti-target"></i> 체중 목표</div>
+    <div class="goal-row"><span class="gk">시작 체중</span><div class="gv-inp"><input type="number" id="p-start-wt" value="74.5" min="30" max="300" step="0.1"><span style="font-size:12px;color:var(--text2)">kg</span></div></div>
+    <div class="goal-row"><span class="gk">목표 체중</span><div class="gv-inp"><input type="number" id="p-goal-wt" value="70.0" min="30" max="300" step="0.1"><span style="font-size:12px;color:var(--text2)">kg</span></div></div>
+    <div class="goal-row"><span class="gk">목표 기간</span><div class="gv-inp"><input type="number" id="p-days" value="30" min="7" max="365"><span style="font-size:12px;color:var(--text2)">일</span></div></div>
+    <div class="goal-row"><span class="gk">시작 날짜</span><div class="gv-inp"><input type="date" id="p-start-date" style="height:36px;border:0.5px solid var(--border);border-radius:8px;padding:0 8px;font-size:13px;background:var(--card);color:var(--text)"></div></div>
+    <div style="background:var(--amber-l);border-radius:10px;padding:10px;margin-top:6px;font-size:12px;color:var(--amber-d)" id="goal-preview"></div>
+  </div>
+  <div class="card">
+    <div class="ct"><i class="ti ti-adjustments"></i> 영양 목표</div>
+    <div class="goal-row"><span class="gk">목표 칼로리</span><div class="gv-inp"><input type="number" id="goal-kcal" min="800" max="3000"><span style="font-size:12px;color:var(--text2)">kcal</span></div></div>
+    <div style="font-size:11px;color:var(--text3);margin:-6px 0 8px;text-align:right">← 비워두면 자동 계산</div>
     <div class="goal-row"><span class="gk">탄수화물 상한</span><div class="gv-inp"><input type="number" id="goal-carb" value="80" min="20" max="300"><span style="font-size:12px;color:var(--text2)">g</span></div></div>
     <div class="goal-row"><span class="gk">단백질 목표</span><div class="gv-inp"><input type="number" id="goal-prot" value="100" min="30" max="300"><span style="font-size:12px;color:var(--text2)">g</span></div></div>
     <div class="goal-row"><span class="gk">수면 목표</span><div class="gv-inp"><input type="number" id="goal-sleep" value="7" min="4" max="12" step="0.5"><span style="font-size:12px;color:var(--text2)">시간</span></div></div>
     <div class="goal-row"><span class="gk">주간 수영 목표</span><div class="gv-inp"><input type="number" id="goal-swim" value="3" min="1" max="7"><span style="font-size:12px;color:var(--text2)">회</span></div></div>
-    <button class="btn btn-primary" style="margin-top:12px" onclick="saveGoals()"><i class="ti ti-check"></i> 목표 저장</button>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="saveGoals()"><i class="ti ti-check"></i> 전체 목표 저장</button>
   </div>
   <div class="card">
     <div class="ct"><i class="ti ti-info-circle"></i> 앱 설치 방법</div>
@@ -352,6 +461,92 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       하단 공유 버튼(□↑) → 홈 화면에 추가<br>
       <div style="font-weight:600;color:var(--text);margin:10px 0 4px">Android (Chrome)</div>
       브라우저 우상단 메뉴(⋮) → 앱 설치<br>또는 주소창 아래 "홈 화면에 추가" 배너 클릭
+    </div>
+  </div>
+  <div class="card" id="api-key-card">
+    <div class="ct"><i class="ti ti-key"></i> AI 분석 API 키</div>
+    <div id="api-status-box" style="border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px"></div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:12px">
+      식사 사진 분석·체중계 인식·AI 가이드를 사용하려면<br>
+      <strong style="color:var(--text)">Anthropic API 키</strong>가 필요합니다.<br>
+      키는 내 핸드폰에만 저장되고 외부로 전송되지 않아요.
+    </div>
+    <div style="background:var(--teal-l);border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:var(--teal-d)">
+      <div style="font-weight:600;margin-bottom:4px">📋 무료 API 키 발급 방법</div>
+      1. <strong>platform.anthropic.com</strong> 접속 → 회원가입<br>
+      2. 로그인 → 우상단 <strong>API Keys</strong> 클릭<br>
+      3. <strong>Create Key</strong> → 복사<br>
+      4. 아래에 붙여넣기 후 저장<br>
+      <div style="margin-top:6px;opacity:.8">💡 첫 가입 시 $5 무료 크레딧 (약 5개월 사용 가능)</div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:5px">API 키 입력</div>
+      <div style="display:flex;gap:8px">
+        <input type="password" id="api-key-input" placeholder="sk-ant-..." style="flex:1;height:42px;border:0.5px solid var(--border);border-radius:10px;padding:0 12px;font-size:13px;background:var(--card);color:var(--text);font-family:monospace">
+        <button onclick="toggleApiKeyVis()" style="height:42px;width:42px;border:0.5px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer;font-size:18px" id="api-eye-btn" aria-label="키 보기">👁</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveApiKey()"><i class="ti ti-check"></i> 저장</button>
+      <button class="btn" style="flex:0 0 auto;padding:0 14px" onclick="clearApiKey()"><i class="ti ti-trash"></i></button>
+    </div>
+  </div>
+</div>
+
+
+<!-- 목표 설정 FAB -->
+<button class="goal-fab" onclick="openGoalModal()" aria-label="목표 설정"><i class="ti ti-target"></i></button>
+
+<!-- 목표 설정 바텀시트 모달 -->
+<div class="modal-overlay" id="goal-modal-overlay" onclick="closeGoalModal(event)">
+  <div class="modal-sheet" id="goal-modal-sheet">
+    <div class="modal-drag"></div>
+    <div class="modal-header">
+      <div class="modal-title"><i class="ti ti-target" style="color:var(--teal)"></i> 목표 설정</div>
+      <button class="modal-close" onclick="closeGoalModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-preview-pill" class="preview-pill" style="display:none"></div>
+
+      <div class="msec">신체 정보</div>
+      <div class="mrow"><label>나이</label><input type="number" id="m-age" min="10" max="100" placeholder="50"><span style="font-size:12px;color:var(--text2)">세</span></div>
+      <div class="mrow"><label>키</label><input type="number" id="m-height" min="100" max="250" placeholder="170"><span style="font-size:12px;color:var(--text2)">cm</span></div>
+      <div class="mrow"><label>성별</label>
+        <select id="m-gender">
+          <option value="male">남성</option>
+          <option value="female">여성</option>
+        </select>
+      </div>
+
+      <div class="msec">체중 목표</div>
+      <div class="mrow"><label>현재 체중</label><input type="number" id="m-start-wt" step="0.1" min="30" max="300" placeholder="74.5"><span style="font-size:12px;color:var(--text2)">kg</span></div>
+      <div class="mrow"><label>목표 체중</label><input type="number" id="m-goal-wt" step="0.1" min="30" max="300" placeholder="70.0"><span style="font-size:12px;color:var(--text2)">kg</span></div>
+      <div class="mrow"><label>목표 기간</label>
+        <select id="m-days" onchange="onModalChange()">
+          <option value="14">2주 (14일)</option>
+          <option value="30" selected>1개월 (30일)</option>
+          <option value="60">2개월 (60일)</option>
+          <option value="90">3개월 (90일)</option>
+          <option value="180">6개월 (180일)</option>
+          <option value="custom">직접 입력</option>
+        </select>
+      </div>
+      <div class="mrow" id="m-days-custom-row" style="display:none">
+        <label>기간 직접</label><input type="number" id="m-days-custom" min="7" max="365" placeholder="일"><span style="font-size:12px;color:var(--text2)">일</span>
+      </div>
+      <div class="mrow"><label>시작 날짜</label><input type="date" id="m-start-date"></div>
+
+      <div id="modal-calc-box" style="background:var(--teal-l);border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:var(--teal-d);line-height:1.8;display:none">
+        <div id="modal-calc-text"></div>
+      </div>
+
+      <div class="msec">영양 목표</div>
+      <div class="mrow"><label>칼로리</label><input type="number" id="m-kcal" min="800" max="3000" placeholder="자동 계산"><span style="font-size:12px;color:var(--text2)">kcal</span></div>
+      <div class="mrow"><label>탄수화물</label><input type="number" id="m-carb" min="20" max="300" placeholder="80"><span style="font-size:12px;color:var(--text2)">g</span></div>
+      <div class="mrow"><label>수면 목표</label><input type="number" id="m-sleep" min="4" max="12" step="0.5" placeholder="7"><span style="font-size:12px;color:var(--text2)">h</span></div>
+      <div class="mrow"><label>주간 수영</label><input type="number" id="m-swim" min="1" max="7" placeholder="3"><span style="font-size:12px;color:var(--text2)">회</span></div>
+
+      <button class="btn btn-primary" style="margin-top:6px" onclick="saveGoalFromModal()"><i class="ti ti-check"></i> 목표 저장</button>
     </div>
   </div>
 </div>
@@ -405,7 +600,9 @@ const QUOTES=[
   {t:"오늘 땀 흘린 것은 내일의 자신감이 된다.",a:"작자 미상"},
 ];
 
-const START_WT=74.5,GOAL_WT=70.0;
+function SW(){return st?.profile?.startWt||74.5;}
+function GW(){return st?.profile?.goalWt||70.0;}
+function PD(){return st?.profile?.days||30;}
 const DKR=['일','월','화','수','목','금','토'];
 let st={foods:[],swimDays:{},weights:{},scalePhotos:[],sleepLog:{},goals:{kcal:1320,carb:80,prot:100,fat:50,sleep:7,swim:3},startDate:null};
 try{const s=localStorage.getItem('dtv5');if(s)st=JSON.parse(s);}catch(e){}
@@ -434,8 +631,8 @@ function tickClock(){
   document.getElementById('live-date').textContent=fmtDate();
   document.getElementById('meal-hint').textContent=mealHint();
   const dp=Math.floor((N()-new Date(st.startDate))/86400000);
-  const lw=latestWt();const rem=Math.max(0,lw-GOAL_WT);
-  document.getElementById('hdr-remain').textContent='목표까지 '+rem.toFixed(1)+' kg · D-'+Math.max(0,30-dp);
+  const lw=latestWt();const rem=Math.max(0,lw-GW());
+  document.getElementById('hdr-remain').textContent='목표까지 '+rem.toFixed(1)+' kg · D-'+Math.max(0,PD()-dp);
 }
 setInterval(tickClock,1000);setQuote();tickClock();
 
@@ -448,18 +645,313 @@ function go(n){
   if(n==='swim')renderSwim();
   if(n==='sleep')renderSleep();
   if(n==='scale')renderScale();
+  if(n==='guide'){loadGoalInputs();updateApiStatus();}
   updateToday();
 }
 
-function G(){return st.goals||{kcal:1320,carb:80,prot:100,fat:50,sleep:7,swim:3};}
+
+function getApiKey(){return localStorage.getItem('dtApiKey')||'';}
+
+function saveApiKey(){
+  const k=document.getElementById('api-key-input').value.trim();
+  if(!k){alert('API 키를 입력해주세요.');return;}
+  if(!k.startsWith('sk-ant-')){alert('올바른 API 키 형식이 아닙니다.\nsk-ant- 로 시작해야 합니다.');return;}
+  localStorage.setItem('dtApiKey',k);
+  updateApiStatus();
+  alert('API 키가 저장되었습니다! AI 분석 기능을 사용할 수 있어요.');
+}
+
+function clearApiKey(){
+  if(!confirm('API 키를 삭제할까요?'))return;
+  localStorage.removeItem('dtApiKey');
+  document.getElementById('api-key-input').value='';
+  updateApiStatus();
+}
+
+function toggleApiKeyVis(){
+  const inp=document.getElementById('api-key-input');
+  const btn=document.getElementById('api-eye-btn');
+  if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}
+  else{inp.type='password';btn.textContent='👁';}
+}
+
+function updateApiStatus(){
+  const k=getApiKey();
+  const box=document.getElementById('api-status-box');
+  const inp=document.getElementById('api-key-input');
+  if(!box)return;
+  if(k){
+    box.style.cssText='border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;background:var(--teal-l);color:var(--teal-d);border:0.5px solid var(--teal-b)';
+    box.innerHTML='<i class="ti ti-circle-check"></i> API 키 등록됨 — AI 분석 기능 사용 가능';
+    if(inp)inp.value=k;
+  } else {
+    box.style.cssText='border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;background:var(--amber-l);color:var(--amber-d);border:0.5px solid var(--amber-b)';
+    box.innerHTML='<i class="ti ti-alert-triangle"></i> API 키 없음 — AI 분석 기능 비활성화. 아래에서 키를 입력하세요.';
+  }
+}
+
+async function callAI(messages, maxTokens){
+  const key=getApiKey();
+  if(!key){
+    alert('AI 분석을 사용하려면 가이드 탭에서 API 키를 먼저 입력해주세요.');
+    go('guide');
+    throw new Error('NO_API_KEY');
+  }
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,messages})
+  });
+  if(!r.ok){
+    const err=await r.json().catch(()=>({}));
+    if(r.status===401)throw new Error('API 키가 올바르지 않습니다. 키를 다시 확인해주세요.');
+    if(r.status===429)throw new Error('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
+    throw new Error(err.error?.message||'AI 분석 오류 ('+r.status+')');
+  }
+  return r.json();
+}
+
+
+/* ── 목표 설정 모달 ── */
+function openGoalModal(){
+  const p=st.profile||{};const g=st.goals||{};
+  const set=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null)el.value=v;};
+  set('m-age',p.age||50);
+  set('m-height',p.height||170);
+  const gsel=document.getElementById('m-gender');if(gsel)gsel.value=p.gender||'male';
+  set('m-start-wt',p.startWt||74.5);
+  set('m-goal-wt',p.goalWt||70.0);
+  const days=p.days||30;
+  const dsel=document.getElementById('m-days');
+  const stdVals=['14','30','60','90','180'];
+  if(stdVals.includes(String(days))){if(dsel)dsel.value=String(days);}
+  else{if(dsel)dsel.value='custom';document.getElementById('m-days-custom-row').style.display='flex';set('m-days-custom',days);}
+  set('m-start-date',st.startDate||TKEY());
+  if(g.kcal)set('m-kcal',g.kcal);
+  set('m-carb',g.carb||80);set('m-sleep',g.sleep||7);set('m-swim',g.swim||3);
+  onModalChange();
+  const overlay=document.getElementById('goal-modal-overlay');
+  overlay.classList.add('open');
+  setTimeout(()=>document.getElementById('goal-modal-sheet').classList.add('show'),10);
+}
+function closeGoalModal(e){
+  if(e&&e.target!==document.getElementById('goal-modal-overlay'))return;
+  document.getElementById('goal-modal-sheet').classList.remove('show');
+  setTimeout(()=>document.getElementById('goal-modal-overlay').classList.remove('open'),300);
+}
+function onModalChange(){
+  const dsel=document.getElementById('m-days');
+  const isCustom=dsel&&dsel.value==='custom';
+  document.getElementById('m-days-custom-row').style.display=isCustom?'flex':'none';
+  const sw=parseFloat(document.getElementById('m-start-wt')?.value)||74.5;
+  const gw=parseFloat(document.getElementById('m-goal-wt')?.value)||70.0;
+  const days=isCustom?(parseFloat(document.getElementById('m-days-custom')?.value)||30):(parseFloat(dsel?.value)||30);
+  const age=parseFloat(document.getElementById('m-age')?.value)||50;
+  const h=parseFloat(document.getElementById('m-height')?.value)||170;
+  const isMale=(document.getElementById('m-gender')?.value||'male')!=='female';
+  const bmr=isMale?(10*sw+6.25*h-5*age+5):(10*sw+6.25*h-5*age-161);
+  const tdee=Math.round(bmr*1.55);
+  const diff=Math.max(0.01,sw-gw);
+  const autoKcal=Math.max(1200,Math.round(tdee-diff*7700/days));
+  const weeklyLoss=(diff/days*7).toFixed(2);
+  const box=document.getElementById('modal-calc-box');
+  const txt=document.getElementById('modal-calc-text');
+  const pill=document.getElementById('modal-preview-pill');
+  if(box&&txt){
+    box.style.display='block';
+    txt.innerHTML=`<strong>기초대사량</strong> ${Math.round(bmr)} kcal · <strong>유지칼로리</strong> ${tdee} kcal<br>`+
+      `<strong>목표</strong> ${diff.toFixed(1)}kg 감량 / ${days}일<br>`+
+      `<strong>권장 섭취</strong> ${autoKcal} kcal/일 · 주 ${(+weeklyLoss*1000/7).toFixed(0)} kcal 적자<br>`+
+      `<strong>주간 감량 속도</strong> 약 ${weeklyLoss} kg/주`;
+  }
+  if(pill){
+    const kcalInp=document.getElementById('m-kcal');
+    if(kcalInp&&!kcalInp.value)kcalInp.placeholder=autoKcal+'(자동)';
+    pill.style.display='inline-flex';
+    const endDate=new Date(document.getElementById('m-start-date')?.value||TKEY());
+    endDate.setDate(endDate.getDate()+days);
+    const endStr=(endDate.getMonth()+1)+'/'+(endDate.getDate());
+    pill.textContent=`${gw}kg 목표 · ${endStr} 완료 예정`;
+  }
+}
+['m-age','m-height','m-gender','m-start-wt','m-goal-wt','m-days','m-days-custom','m-start-date'].forEach(id=>{
+  setTimeout(()=>{const el=document.getElementById(id);if(el)el.addEventListener('input',onModalChange);},0);
+});
+function saveGoalFromModal(){
+  const dsel=document.getElementById('m-days');
+  const isCustom=dsel&&dsel.value==='custom';
+  const days=isCustom?(parseInt(document.getElementById('m-days-custom')?.value)||30):(parseInt(dsel?.value)||30);
+  const sw=parseFloat(document.getElementById('m-start-wt').value)||74.5;
+  const gw=parseFloat(document.getElementById('m-goal-wt').value)||70.0;
+  const sd=document.getElementById('m-start-date').value||TKEY();
+  st.profile={
+    age:parseInt(document.getElementById('m-age').value)||50,
+    height:parseInt(document.getElementById('m-height').value)||170,
+    gender:document.getElementById('m-gender').value,
+    startWt:sw, goalWt:gw, days
+  };
+  st.startDate=sd;
+  const mk=parseInt(document.getElementById('m-kcal').value);
+  st.goals={
+    kcal:mk||null,
+    carb:parseInt(document.getElementById('m-carb').value)||80,
+    prot:st.goals?.prot||100, fat:50,
+    sleep:parseFloat(document.getElementById('m-sleep').value)||7,
+    swim:parseInt(document.getElementById('m-swim').value)||3
+  };
+  save();closeGoalModal();updateToday();renderScale();renderSwim();renderAchieve();
+  loadGoalInputs();
+  // 저장 완료 피드백
+  const fab=document.querySelector('.goal-fab');
+  if(fab){fab.style.background='#27ae60';setTimeout(()=>fab.style.background='var(--teal)',1200);}
+}
+
+/* ── 달성률 렌더링 ── */
+function renderAchieve(){
+  const p=st.profile||{};const g=G();
+  const lw=latestWt();
+  const sw=SW(),gw=GW(),pd=PD();
+  const lost=Math.max(0,sw-lw);
+  const rem=Math.max(0,lw-gw);
+  const totalDiff=Math.max(0.01,sw-gw);
+  const pct=Math.min(100,Math.round(lost/totalDiff*100));
+
+  // 링 차트
+  const circ=326.7;
+  const ring=document.getElementById('ring-wt');
+  if(ring)ring.style.strokeDashoffset=circ*(1-pct/100);
+  const rtxt=document.getElementById('ring-pct-txt');
+  if(rtxt)rtxt.textContent=pct+'%';
+
+  // 수치
+  const daysPassed=Math.floor((N()-new Date(st.startDate||TKEY()))/86400000);
+  const daysLeft=Math.max(0,pd-daysPassed);
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('ach-lost',lost.toFixed(1)+' kg');
+  set('ach-rem',rem.toFixed(1)+' kg');
+  set('ach-days-gone',daysPassed+'일');
+  set('ach-days-left',daysLeft+'일');
+
+  // 수영 달성률
+  const ws=new Date(N());ws.setDate(N().getDate()-N().getDay());
+  const wkSw=Object.keys(st.swimDays).filter(k=>new Date(k)>=ws&&new Date(k)<=N()).length;
+  const swimGoal=g.swim||3;
+  const swimPct=Math.min(100,Math.round(wkSw/swimGoal*100));
+  set('rate-swim-lbl',wkSw+'/'+swimGoal+'회');
+  const rs=document.getElementById('rate-swim');if(rs)rs.style.width=swimPct+'%';
+
+  // 칼로리 달성률 (오늘 섭취 / 목표)
+  const tf=todayFoods();
+  const totCal=tf.reduce((a,f)=>a+f.cal,0);
+  const calGoal=g.kcal||1320;
+  const calPct=Math.min(100,Math.round(totCal/calGoal*100));
+  set('rate-cal-lbl',Math.round(totCal)+'/'+calGoal+'kcal');
+  const rc=document.getElementById('rate-cal');if(rc)rc.style.width=calPct+'%';
+
+  // 수면 달성률 (어젯밤)
+  const yd=new Date(N());yd.setDate(yd.getDate()-1);
+  const ysl=st.sleepLog[tkey(yd)];
+  const sleepGoal=g.sleep||7;
+  const slPct=ysl?Math.min(100,Math.round(ysl.hrs/sleepGoal*100)):0;
+  set('rate-sleep-lbl',ysl?(ysl.hrs.toFixed(1)+'h/'+sleepGoal+'h'):'미기록');
+  const rsl=document.getElementById('rate-sleep');if(rsl)rsl.style.width=slPct+'%';
+
+  // 마일스톤
+  const steps=[0.25,0.5,0.75,1.0].map(r=>({
+    kg:+(sw-totalDiff*r).toFixed(1),
+    label:Math.round(r*100)+'% 달성 ('+((sw-totalDiff*r).toFixed(1))+'kg)',
+    done:lw<=(sw-totalDiff*r),
+    current:lw>(sw-totalDiff*r)&&lw<=(sw-totalDiff*(r-(r===0.25?0:0.25)))
+  }));
+  // simpler milestone: fixed steps
+  const diff=totalDiff;
+  const milestones=[
+    {pct:25, kg:+(sw-diff*0.25).toFixed(1)},
+    {pct:50, kg:+(sw-diff*0.5).toFixed(1)},
+    {pct:75, kg:+(sw-diff*0.75).toFixed(1)},
+    {pct:100,kg:+gw.toFixed(1)},
+  ];
+  const mlEl=document.getElementById('milestone-list');
+  if(mlEl){
+    mlEl.innerHTML=milestones.map(m=>{
+      const done=lw<=m.kg;
+      const now=!done&&lw<=(m.kg+diff*0.25+0.1);
+      const cls=done?'ms-done':now?'ms-now':'ms-todo';
+      const icon=done?'✓':now?'→':'○';
+      return `<div class="milestone-row">
+        <div class="ms-dot ${cls}">${icon}</div>
+        <div style="flex:1">
+          <div style="font-weight:${done||now?'600':'400'};color:${done?'var(--teal-d)':now?'var(--amber-d)':'var(--text3)'}">${m.pct}% 달성</div>
+          <div style="font-size:11px;color:var(--text3)">${m.kg}kg 도달</div>
+        </div>
+        ${done?'<div style="font-size:11px;color:var(--teal-d);font-weight:600">달성 ✓</div>':now?'<div style="font-size:11px;color:var(--amber-d);font-weight:600">진행 중</div>':''}
+      </div>`;}).join('');
+  }
+}
+
+function G(){
+  const g=st.goals||{};
+  const p=st.profile||{};
+  const h=p.height||170;const w=p.startWt||74.5;const age=p.age||50;
+  const isMale=p.gender!=='female';
+  const bmr=isMale?(10*w+6.25*h-5*age+5):(10*w+6.25*h-5*age-161);
+  const tdee=Math.round(bmr*1.55);
+  const diff=Math.max(0.1,(p.startWt||74.5)-(p.goalWt||70.0));
+  const days=p.days||30;
+  const autoKcal=Math.max(1200,Math.round(tdee-(diff*7700/days)));
+  return {kcal:g.kcal||autoKcal,carb:g.carb||80,prot:g.prot||100,fat:g.fat||50,sleep:g.sleep||7,swim:g.swim||3,tdee,bmr:Math.round(bmr),autoKcal};
+}
+function calcBMR(){
+  const age=+document.getElementById('p-age').value||50;
+  const h=+document.getElementById('p-height').value||170;
+  const gender=document.getElementById('p-gender').value;
+  const sw=+document.getElementById('p-start-wt').value||74.5;
+  const gw=+document.getElementById('p-goal-wt').value||70.0;
+  const days=+document.getElementById('p-days').value||30;
+  const isMale=gender!=='female';
+  const bmr=isMale?(10*sw+6.25*h-5*age+5):(10*sw+6.25*h-5*age-161);
+  const tdee=Math.round(bmr*1.55);
+  const diff=Math.max(0.1,sw-gw);
+  const autoKcal=Math.max(1200,Math.round(tdee-(diff*7700/days)));
+  const el=document.getElementById('bmr-preview');
+  if(el)el.textContent='기초대사량 '+Math.round(bmr)+'kcal · 유지 칼로리 '+tdee+'kcal';
+  const gp=document.getElementById('goal-preview');
+  if(gp){const weekly=diff*7700/days*7;gp.textContent='목표: '+diff.toFixed(1)+'kg 감량 / '+days+'일 · 일일 '+(diff*7700/days).toFixed(0)+'kcal 적자 필요 · 주 '+weekly.toFixed(0)+'kcal';}
+  const ki=document.getElementById('goal-kcal');
+  if(ki&&!ki.value)ki.placeholder=autoKcal+'(자동)';
+}
 function saveGoals(){
-  st.goals={kcal:+document.getElementById('goal-kcal').value||1320,carb:+document.getElementById('goal-carb').value||80,prot:+document.getElementById('goal-prot').value||100,fat:50,sleep:+document.getElementById('goal-sleep').value||7,swim:+document.getElementById('goal-swim').value||3};
-  save();updateToday();alert('목표가 저장되었습니다!');
+  const sw=+document.getElementById('p-start-wt').value||74.5;
+  const gw=+document.getElementById('p-goal-wt').value||70.0;
+  const days=+document.getElementById('p-days').value||30;
+  const sd=document.getElementById('p-start-date').value||TKEY();
+  st.profile={age:+document.getElementById('p-age').value||50,height:+document.getElementById('p-height').value||170,gender:document.getElementById('p-gender').value,startWt:sw,goalWt:gw,days};
+  st.startDate=sd;
+  const manKcal=+document.getElementById('goal-kcal').value;
+  st.goals={kcal:manKcal||null,carb:+document.getElementById('goal-carb').value||80,prot:+document.getElementById('goal-prot').value||100,fat:50,sleep:+document.getElementById('goal-sleep').value||7,swim:+document.getElementById('goal-swim').value||3};
+  save();updateToday();renderScale();
+  alert('목표가 저장되었습니다!\n목표 체중: '+gw+'kg / '+days+'일');
+}
+function loadGoalInputs(){
+  const p=st.profile||{};const g=st.goals||{};
+  document.getElementById('p-age').value=p.age||50;
+  document.getElementById('p-height').value=p.height||170;
+  document.getElementById('p-gender').value=p.gender||'male';
+  document.getElementById('p-start-wt').value=p.startWt||74.5;
+  document.getElementById('p-goal-wt').value=p.goalWt||70.0;
+  document.getElementById('p-days').value=p.days||30;
+  document.getElementById('p-start-date').value=st.startDate||TKEY();
+  document.getElementById('goal-carb').value=g.carb||80;
+  document.getElementById('goal-prot').value=g.prot||100;
+  document.getElementById('goal-sleep').value=g.sleep||7;
+  document.getElementById('goal-swim').value=g.swim||3;
+  if(g.kcal)document.getElementById('goal-kcal').value=g.kcal;
+  calcBMR();
 }
 function todayFoods(){return st.foods.filter(f=>f.date===TKEY());}
 function todaySleep(){return st.sleepLog[TKEY()]||null;}
 function todaySwimCal(){return st.swimDays[TKEY()]?.cal||0;}
-function latestWt(){const vs=Object.values(st.weights);return vs.length?vs[vs.length-1]:START_WT;}
+function latestWt(){const vs=Object.values(st.weights);return vs.length?vs[vs.length-1]:SW();}
 
 function updateToday(){
   const g=G();const tf=todayFoods();
@@ -482,7 +974,7 @@ function updateToday(){
   const slP=sl?Math.min(sl.hrs/g.sleep*100,100):0;
   document.getElementById('bar-sl').style.width=slP+'%';
   document.getElementById('lsl').textContent=(sl?sl.hrs.toFixed(1):0)+'/'+g.sleep+'h';
-  renderTodayGrid(tf);renderMealGallery(tf);renderAlerts(tCal,tCarb,sl,burn,g);
+  renderTodayGrid(tf);renderMealGallery(tf);renderAlerts(tCal,tCarb,sl,burn,g);renderAchieve();
 }
 
 function renderTodayGrid(foods){
@@ -548,9 +1040,9 @@ function handleFoodImg(input){
 async function processFood(src,mt){
   const b64=src.split(',')[1];
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:`이 식사 사진을 분석해서 반드시 아래 JSON만 출력 (다른 텍스트 없이):
-{"foods":[{"name":"음식명","cal":숫자,"carb":숫자,"prot":숫자,"fat":숫자}],"total":{"cal":숫자,"carb":숫자,"prot":숫자,"fat":숫자},"advice":"저탄수 다이어트 관점 한 줄 조언"}`}]}]})});
-    const d=await r.json();const txt=d.content?.map(c=>c.text||'').join('');
+    const d=await callAI([{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:`이 식사 사진을 분석해서 반드시 아래 JSON만 출력 (다른 텍스트 없이):
+{"foods":[{"name":"음식명","cal":숫자,"carb":숫자,"prot":숫자,"fat":숫자}],"total":{"cal":숫자,"carb":숫자,"prot":숫자,"fat":숫자},"advice":"저탄수 다이어트 관점 한 줄 조언"}`}]}],1000);
+    const txt=d.content?.map(c=>c.text||'').join('');
     const p=JSON.parse(txt.replace(/```json|```/g,'').trim());
     document.getElementById('food-status').style.display='none';
     document.getElementById('food-ai').style.display='block';
@@ -561,8 +1053,10 @@ async function processFood(src,mt){
     pendMeal={name:p.foods.map(f=>f.name).join(', '),cal:p.total?.cal||0,carb:p.total?.carb||0,prot:p.total?.prot||0,fat:p.total?.fat||0,date:TKEY(),img:src,recordedAt:nowStr()};
   }catch(e){
     document.getElementById('food-status').style.display='none';
-    document.getElementById('food-ai').style.display='block';
-    document.getElementById('food-ai-foods').innerHTML='<div style="font-size:12px;color:var(--text3)">분석 오류. 다시 시도해주세요.</div>';
+    if(e.message!=='NO_API_KEY'){
+      document.getElementById('food-ai').style.display='block';
+      document.getElementById('food-ai-foods').innerHTML='<div style="font-size:12px;color:var(--text3)">'+(e.message||'분석 오류. 다시 시도해주세요.')+'</div>';
+    }
   }
 }
 
@@ -603,9 +1097,9 @@ function handleScaleImg(input){
 async function processScale(src,mt){
   const b64=src.split(',')[1];
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:`이 체중계 사진에서 숫자를 읽어줘. 아래 JSON만 출력 (다른 텍스트 없이):
-{"weight":숫자또는null,"confidence":"high|medium|low","reading":"읽은 숫자 그대로","advice":"현재 체중 관련 한 줄 격려","note":"읽기 어려운 경우 이유"}`}]}]})});
-    const d=await r.json();const txt=d.content?.map(c=>c.text||'').join('');
+    const d=await callAI([{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:`이 체중계 사진에서 숫자를 읽어줘. 아래 JSON만 출력 (다른 텍스트 없이):
+{"weight":숫자또는null,"confidence":"high|medium|low","reading":"읽은 숫자 그대로","advice":"현재 체중 관련 한 줄 격려","note":"읽기 어려운 경우 이유"}`}]}],600);
+    const txt=d.content?.map(c=>c.text||'').join('');
     const p=JSON.parse(txt.replace(/```json|```/g,'').trim());
     document.getElementById('scale-status').style.display='none';
     document.getElementById('scale-ai').style.display='block';
@@ -625,10 +1119,12 @@ async function processScale(src,mt){
     document.getElementById('scale-save-btn').style.display='flex';
   }catch(e){
     document.getElementById('scale-status').style.display='none';
-    document.getElementById('scale-ai').style.display='block';
-    document.getElementById('scale-ai-rows').innerHTML='<div style="font-size:12px;color:var(--text3)">분석 오류. 숫자가 잘 보이도록 다시 찍어주세요.</div>';
-    document.getElementById('scale-confirm').style.display='block';
-    document.getElementById('scale-save-btn').style.display='flex';
+    if(e.message!=='NO_API_KEY'){
+      document.getElementById('scale-ai').style.display='block';
+      document.getElementById('scale-ai-rows').innerHTML='<div style="font-size:12px;color:var(--text3)">'+(e.message||'분석 오류. 숫자가 잘 보이도록 다시 찍어주세요.')+'</div>';
+      document.getElementById('scale-confirm').style.display='block';
+      document.getElementById('scale-save-btn').style.display='flex';
+    }
   }
 }
 
@@ -664,7 +1160,7 @@ function renderScale(){
   const ch=document.getElementById('wt-chart');const lb=document.getElementById('wt-labels');
   if(!def.length){ch.innerHTML='<div style="width:100%;text-align:center;font-size:12px;color:var(--text3);padding:1rem">체중을 기록하면 표시됩니다</div>';lb.innerHTML='';}
   else{
-    const minW=Math.min(...def,GOAL_WT)-.5,maxW=Math.max(...def,START_WT)+.5,range=maxW-minW||1;
+    const minW=Math.min(...def,GW())-.5,maxW=Math.max(...def,SW())+.5,range=maxW-minW||1;
     ch.innerHTML=keys.map((k,i)=>{const w=wts[i];const h=w?Math.max(4,Math.round((w-minW)/range*75)):0;
       return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:1px">
         <div style="font-size:7px;color:var(--text3);height:11px;line-height:11px">${w?w:''}</div>
@@ -672,13 +1168,13 @@ function renderScale(){
       </div>`;}).join('');
     lb.innerHTML=keys.map((k,i)=>`<span style="flex:1;text-align:center">${i%5===0?k.lbl:''}</span>`).join('');
   }
-  const lw=def.length?def[def.length-1]:START_WT;
-  const lost=Math.max(0,START_WT-lw),rem=Math.max(0,lw-GOAL_WT);
+  const lw=def.length?def[def.length-1]:SW();
+  const lost=Math.max(0,SW()-lw),rem=Math.max(0,lw-GW());
   document.getElementById('sc-bmi').textContent=(lw/(1.7*1.7)).toFixed(1);
   document.getElementById('sc-cur').textContent=lw.toFixed(1);
   document.getElementById('sc-lost').textContent=lost.toFixed(1);
   document.getElementById('sc-rem').textContent=rem.toFixed(1);
-  document.getElementById('sc-pct').textContent=Math.round(Math.min(lost/4.5*100,100))+'%';
+  document.getElementById('sc-pct').textContent=Math.round(Math.min(lost/Math.max(0.1,SW()-GW())*100,100))+'%';
 }
 
 function renderSwim(){
@@ -762,8 +1258,8 @@ async function genGuide(){
   const el=document.getElementById('guide-content');
   el.innerHTML='<div style="font-size:13px;color:var(--text3);text-align:center;padding:16px"><span class="spin"></span> AI가 분석 중...</div>';
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:`다이어트 코치. 50세 남성, 170cm, 시작 74.5kg → 현재 ${lw.toFixed(1)}kg → 목표 70kg(한달). 체중추이:${recentWts||'없음'}. 오늘:칼로리${Math.round(tc)}(목표${g.kcal}),탄수화물${Math.round(tcarb)}(목표${g.carb}g),단백질${Math.round(tprot)}g,수영${Math.round(burn)}kcal,수면${sl?sl.hrs.toFixed(1)+'h':'미기록'}(목표${g.sleep}h). 이번주:수영${wkSw}회(목표${g.swim}회),평균수면${avgSl?avgSl.toFixed(1)+'h':'미기록'}. 아침수영 주3~4회,저탄수화물식단. 아래 JSON만 출력: {"status":"good|warn|bad","overall":"전체평가한줄","items":[{"type":"weight|meal|swim|sleep","status":"ok|warn|bad","title":"항목제목","detail":"구체적가이드2문장"}],"tomorrow":"내일핵심액션한가지"}`}]})});
-    const d=await r.json();const txt=d.content?.map(c=>c.text||'').join('');
+    const d=await callAI([{role:'user',content:`다이어트 코치. ${st.profile?.age||50}세 ${st.profile?.gender==="female"?"여성":"남성"}, ${st.profile?.height||170}cm, 시작 ${SW().toFixed(1)}kg → 현재 ${lw.toFixed(1)}kg → 목표 ${GW()}kg(${PD()}일). 체중추이:${recentWts||'없음'}. 오늘:칼로리${Math.round(tc)}(목표${g.kcal}),탄수화물${Math.round(tcarb)}(목표${g.carb}g),단백질${Math.round(tprot)}g,수영${Math.round(burn)}kcal,수면${sl?sl.hrs.toFixed(1)+'h':'미기록'}(목표${g.sleep}h). 이번주:수영${wkSw}회(목표${g.swim}회),평균수면${avgSl?avgSl.toFixed(1)+'h':'미기록'}. 아침수영 주3~4회,저탄수화물식단. 아래 JSON만 출력: {"status":"good|warn|bad","overall":"전체평가한줄","items":[{"type":"weight|meal|swim|sleep","status":"ok|warn|bad","title":"항목제목","detail":"구체적가이드2문장"}],"tomorrow":"내일핵심액션한가지"}`}],800);
+    const txt=d.content?.map(c=>c.text||'').join('');
     const p=JSON.parse(txt.replace(/```json|```/g,'').trim());
     const sb={'good':'var(--teal-d)','warn':'var(--amber-d)','bad':'var(--red-d)'};
     const sbg={'good':'var(--teal-l)','warn':'var(--amber-l)','bad':'var(--red-l)'};
@@ -773,7 +1269,7 @@ async function genGuide(){
     el.innerHTML=`<div style="background:${sbg[p.status]};border:0.5px solid ${sbb[p.status]};border-radius:10px;padding:12px;margin-bottom:10px;font-size:14px;color:${sb[p.status]};font-weight:600">${p.overall}</div>
       ${(p.items||[]).map(it=>`<div class="gc ${gcls[it.status]||'gwn'}"><div class="gt"><i class="ti ${ti[it.type]||'ti-circle'}" style="font-size:15px"></i>${it.title}</div><div class="gb">${it.detail}</div></div>`).join('')}
       ${p.tomorrow?`<div style="background:var(--bg);border-radius:10px;padding:12px;margin-top:6px;font-size:13px"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">내일 핵심 액션</div><div style="font-weight:600;color:var(--text)">${p.tomorrow}</div></div>`:''}`;
-  }catch(e){el.innerHTML='<div style="font-size:13px;color:var(--text3)">가이드 생성 오류. 다시 시도해주세요.</div>';}
+  }catch(e){if(e.message!=='NO_API_KEY')el.innerHTML='<div style="font-size:13px;color:var(--text3)">'+(e.message||'가이드 생성 오류. 다시 시도해주세요.')+'</div>';}
 }
 
 document.getElementById('sl-bed').addEventListener('input',updateSlCalc);
@@ -789,7 +1285,7 @@ window.addEventListener('appinstalled',()=>{document.getElementById('install-ban
 if(window.navigator.standalone||window.matchMedia('(display-mode: standalone)').matches){document.getElementById('install-banner').style.display='none';}
 else{setTimeout(()=>{document.getElementById('install-banner').style.display='flex';},2000);}
 
-updateSlCalc();updateToday();renderScale();
+updateSlCalc();updateToday();renderScale();updateApiStatus();renderAchieve();
 </script>
 </body>
 </html>
